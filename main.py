@@ -2,12 +2,9 @@ import time
 import json
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.service import Service
+
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+
 
 # Чтение JSON из файла
 with open('config.json', 'r', encoding='utf-8') as f:
@@ -20,7 +17,7 @@ email = data['email']
 password = data['password']
 urlstream = data['urlstream']
 comment = data['comment']
-maintime = data['maintime']
+maintime = 5
 timeauth = data['timeauth']
 timestream = data['timestream']
 timeexit = data['timeexit']
@@ -35,9 +32,9 @@ chrome_options.add_argument('--disable-blink-features=AutomationControlled')
 
 # Инициализировать браузер
 driver = webdriver.Chrome(options=chrome_options)
-driver.set_window_size(1920, 1080)
+driver.set_window_size(1500, 850)
 driver.get(url)
-time.sleep(maintime)
+time.sleep(50)
 
 element_found = False
 

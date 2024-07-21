@@ -1,12 +1,8 @@
 {
   "url": "https://tiktok.com",
   "proxy": "35.185.196.38:3128",
-  "email": "",
-  "password": "",
-  "urlstream": "",
-  "comment": "",
-  "timeexit": "",
-  "timestream": "",
-  "maintime": "",
-  "timeauth": ""
+  "login": "captchatester123",
+  "password": "HelloWorld123!",
+  "timeout": 600,
+  "delay": 3
 }
