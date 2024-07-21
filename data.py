@@ -5,7 +5,6 @@ from selenium.webdriver.common.by import By
 
 from selenium.webdriver.chrome.options import Options
 
-
 # Чтение JSON из файла
 with open('config.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
