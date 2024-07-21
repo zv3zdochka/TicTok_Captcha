@@ -161,3 +161,6 @@ cython_debug/
 .idea/
 
 /captcha_screenshot.png
+/data/
+/img.png
+/rubbish.py

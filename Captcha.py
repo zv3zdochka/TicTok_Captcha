@@ -29,13 +29,13 @@ chrome_options = Options()
 # chrome_options.add_argument(f'--proxy-server={proxy}')
 chrome_options.add_argument('--disable-infobars')
 chrome_options.add_argument('--disable-extensions')
-chrome_options.add_argument('--start-maximized')
 chrome_options.add_argument('--disable-plugins-discovery')
 chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+chrome_options.add_argument("--start-maximized")
+
 
 # Initialize driver
 driver = webdriver.Chrome(options=chrome_options)
-driver.set_window_size(1500, 850)
 driver.get(url)
 
 # ThreadPoolExecutor for running blocking selenium operations

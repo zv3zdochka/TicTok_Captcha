@@ -4,5 +4,5 @@
   "login": "captchatester123",
   "password": "HelloWorld123!",
   "timeout": 600,
-  "delay": 3
+  "delay": 5
 }
