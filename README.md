@@ -6,13 +6,7 @@
 
 ## Установка
 
-1. Склонируйте репозиторий:
-   ```bash
-   git clone <URL вашего репозитория>
-   cd <название директории>
-   ```
-
-2. Установите необходимые зависимости:
+1. Установите необходимые зависимости:
    ```bash
    pip install -r requirements.txt
    ```
@@ -22,18 +16,18 @@
 Создайте файл `config.json` в корне проекта со следующим содержанием:
 ```json
 {
-    "url": "https://www.tiktok.com/login",
-    "proxy": "http://your-proxy-server:port",
-    "login": "your-login",
-    "password": "your-password",
-    "timeout": 30,
-    "delay": 5
+  "url": "https://tiktok.com",
+  "proxy": "35.185.196.38:3128",
+  "login": "captchatester123",
+  "password": "HelloWorld123!",
+  "timeout": 60,
+  "delay": 5
 }
 ```
 
 ## Принцип работы
 
-1. **Инициализация**: Настраиваем Selenium WebDriver с указанным прокси и опциями.
+1. **Инициализация**:
    ```python
    chrome_options = Options()
    chrome_options.add_argument(f'--proxy-server={proxy}')
@@ -82,23 +76,6 @@
        await button_task
    ```
 
-## Запуск
 
-Запустите скрипт:
-```bash
-python script_name.py
-```
-
-## Требования
-
-- Python 3.7+
-- Selenium
-- asyncio
-- json
-- concurrent.futures
-- webdriver_manager
-
-## Примечания
-
-- Убедитесь, что `config.json` заполнен правильно перед запуском скрипта.
-- Скрипт рассчитан на работу с капчей и может потребовать доработки в зависимости от изменений на стороне TikTok.
+## P.S
+Вставлены фрагменты кода, которые были укорочены во избежания загромождения, их цель передать смысл
