@@ -1,5 +1,6 @@
 import json
 import asyncio
+import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from selenium import webdriver
@@ -20,39 +21,50 @@ with open('config.json', 'r', encoding='utf-8') as f:
     del data
 
 status = 0
+# 0 - not done 1 - in process 2 - done
 captcha = 0
 # 0 - init 1 - open login 2 - select type 3 change type 4 - success
 
 
 # Settings
 chrome_options = Options()
-# chrome_options.add_argument(f'--proxy-server={proxy}')
+chrome_options.add_argument(f'--proxy-server={proxy}')
 chrome_options.add_argument('--disable-infobars')
 chrome_options.add_argument('--disable-extensions')
 chrome_options.add_argument('--disable-plugins-discovery')
 chrome_options.add_argument('--disable-blink-features=AutomationControlled')
 chrome_options.add_argument("--start-maximized")
 
-
 # Initialize driver
 driver = webdriver.Chrome(options=chrome_options)
+driver.delete_all_cookies()
 driver.get(url)
-
+time.sleep(5)
 # ThreadPoolExecutor for running blocking selenium operations
 executor = ThreadPoolExecutor(max_workers=2)
 
 
 async def wait_for_captcha():
+    global captcha
     loop = asyncio.get_event_loop()
     try:
         await loop.run_in_executor(executor, WebDriverWait(driver, timeout).until,
                                    waiter.presence_of_element_located(
                                        (By.XPATH, '//*[@id="captcha_container"]/div')))
         print("Капча найдена")
+        captcha = 1
 
         await asyncio.sleep(delay)
 
         driver.save_screenshot(f"{uuid.uuid4()}.png")
+
+
+        # wait operator to do captcha
+        await asyncio.sleep(delay)
+
+
+
+        captcha = 2
 
         return True
     except Exception as e:
@@ -90,6 +102,9 @@ async def clicker():
     global status
     loop = asyncio.get_event_loop()
     while True:
+        if captcha == 1:
+            await asyncio.sleep(delay)
+            continue
         match status:
             case 0:
                 try:
