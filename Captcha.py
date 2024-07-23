@@ -19,6 +19,7 @@ with open('config.json', 'r', encoding='utf-8') as f:
     password_data = data['password']
     timeout = data['timeout']
     delay = data['delay']
+    # com = data['com']
     del data
 
 status = 0
@@ -56,7 +57,6 @@ async def wait_for_captcha():
         captcha = 1
 
         await call_operator("Ссылка")
-
 
         await asyncio.sleep(delay)
 
@@ -159,18 +159,39 @@ async def clicker():
                 await asyncio.sleep(timeout)
                 return
 
+
 async def like():
-    pass
+    loop = asyncio.get_event_loop()
+    but = await loop.run_in_executor(executor, WebDriverWait(driver, timeout).until,
+                                     waiter.presence_of_element_located(
+                                         (By.XPATH,
+                                          '//*[@id="main-content-homepage_hot"]/div[1]/div[1]/div/div/div[2]/button[1]')))
+
+    but.click()
+
 
 async def comment():
-    pass
+    global com
+    loop = asyncio.get_event_loop()
+    but = await loop.run_in_executor(executor, WebDriverWait(driver, timeout).until,
+                                     waiter.presence_of_element_located(
+                                         (By.XPATH,
+                                          '//*[@id="main-content-homepage_hot"]/div[1]/div[1]/div/div/div[2]/button[2]')))
 
+    but.click()
+    box = await loop.run_in_executor(executor, WebDriverWait(driver, timeout).until,
+                                     waiter.presence_of_element_located(
+                                         (By.XPATH,
+                                          '//*[@id="app"]/div[2]/div[4]/div/div[2]/div[2]/div/div[1]/div')))
 
-async def subs():
-    pass
+    box.send_keys(com)
 
+    publ = await loop.run_in_executor(executor, WebDriverWait(driver, timeout).until,
+                                      waiter.presence_of_element_located(
+                                          (By.XPATH,
+                                           '//*[@id="app"]/div[2]/div[4]/div/div[2]/div[2]/div/div[2]')))
 
-
+    publ.click()
 
 
 async def main():
