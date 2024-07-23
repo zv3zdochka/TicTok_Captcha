@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as waiter
+from Bot import call_operator
 
 # json
 with open('config.json', 'r', encoding='utf-8') as f:
@@ -54,15 +55,15 @@ async def wait_for_captcha():
         print("Капча найдена")
         captcha = 1
 
+        await call_operator("Ссылка")
+
+
         await asyncio.sleep(delay)
 
         driver.save_screenshot(f"{uuid.uuid4()}.png")
-
-
+        # find operator
         # wait operator to do captcha
         await asyncio.sleep(delay)
-
-
 
         captcha = 2
 
@@ -154,9 +155,22 @@ async def clicker():
             case 4:
 
                 await asyncio.sleep(50)
-                print("here")
+                print("Ждем команд")
                 await asyncio.sleep(timeout)
                 return
+
+async def like():
+    pass
+
+async def comment():
+    pass
+
+
+async def subs():
+    pass
+
+
+
 
 
 async def main():
