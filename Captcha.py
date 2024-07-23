@@ -8,6 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as waiter
+from Bot import call_operator
 
 # json
 with open('config.json', 'r', encoding='utf-8') as f:
@@ -18,6 +19,7 @@ with open('config.json', 'r', encoding='utf-8') as f:
     password_data = data['password']
     timeout = data['timeout']
     delay = data['delay']
+    # com = data['com']
     del data
 
 status = 0
@@ -54,15 +56,14 @@ async def wait_for_captcha():
         print("Капча найдена")
         captcha = 1
 
+        await call_operator("Ссылка")
+
         await asyncio.sleep(delay)
 
         driver.save_screenshot(f"{uuid.uuid4()}.png")
-
-
+        # find operator
         # wait operator to do captcha
         await asyncio.sleep(delay)
-
-
 
         captcha = 2
 
@@ -154,9 +155,43 @@ async def clicker():
             case 4:
 
                 await asyncio.sleep(50)
-                print("here")
+                print("Ждем команд")
                 await asyncio.sleep(timeout)
                 return
+
+
+async def like():
+    loop = asyncio.get_event_loop()
+    but = await loop.run_in_executor(executor, WebDriverWait(driver, timeout).until,
+                                     waiter.presence_of_element_located(
+                                         (By.XPATH,
+                                          '//*[@id="main-content-homepage_hot"]/div[1]/div[1]/div/div/div[2]/button[1]')))
+
+    but.click()
+
+
+async def comment():
+    global com
+    loop = asyncio.get_event_loop()
+    but = await loop.run_in_executor(executor, WebDriverWait(driver, timeout).until,
+                                     waiter.presence_of_element_located(
+                                         (By.XPATH,
+                                          '//*[@id="main-content-homepage_hot"]/div[1]/div[1]/div/div/div[2]/button[2]')))
+
+    but.click()
+    box = await loop.run_in_executor(executor, WebDriverWait(driver, timeout).until,
+                                     waiter.presence_of_element_located(
+                                         (By.XPATH,
+                                          '//*[@id="app"]/div[2]/div[4]/div/div[2]/div[2]/div/div[1]/div')))
+
+    box.send_keys(com)
+
+    publ = await loop.run_in_executor(executor, WebDriverWait(driver, timeout).until,
+                                      waiter.presence_of_element_located(
+                                          (By.XPATH,
+                                           '//*[@id="app"]/div[2]/div[4]/div/div[2]/div[2]/div/div[2]')))
+
+    publ.click()
 
 
 async def main():
