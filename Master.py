@@ -1,6 +1,8 @@
 from Captcha import Bot
 import asyncio
 import uuid
+import json
+
 
 class Master:
     def __init__(self):
@@ -9,6 +11,18 @@ class Master:
     async def new_bot(self):
         id = uuid.uuid4()
         print(id)
+
+        data = {"url": "https://tiktok.com",
+                "id": str(id),
+                "proxy": "35.185.196.38:3128",
+                "login": "captchatester123",
+                "password": "HelloWorld123!",
+                "timeout": 60,
+                "delay": 5}
+
+        with open(f"{str(id)}.json", 'w') as f:
+            json.dump(data, f)
+
         self.bots[id] = Bot(id)
         print(self.bots)
 
@@ -17,14 +31,15 @@ class Master:
             print("Rule is running...")
             await asyncio.sleep(1)
 
+
 class Server(Master):
     def __init__(self):
         super().__init__()
 
     async def find_task(self):
+        task = 1
         while True:
             # server request
-            task = 1
             await asyncio.sleep(3)
             print(task)
             match task:
@@ -45,6 +60,7 @@ class Server(Master):
     async def command_like(self):
         print("Command like received")
 
+
 async def main():
     M = Master()
     S = Server()
@@ -52,6 +68,7 @@ async def main():
         M.rule(),
         S.find_task()
     )
+
 
 if __name__ == "__main__":
     asyncio.run(main())

@@ -14,27 +14,20 @@ from Bot import call_operator
 class Bot():
     def __init__(self, id):
         self.url, self.proxy, self.login_data, self.password_data, self.timeout, self.delay, self.cookie = None, None, None, None, None, None, None
+        self.id = str(id)
         self.load_config()
         self.status = 0  # 0 - not done 1 - in process 2 - done
         self.captcha = 0  # 0 - init 1 - open login 2 - select type 3 change type 4 - success
         self.chrome_options = self.setup_chrome_options()
         self.driver = webdriver.Chrome(options=self.chrome_options)
         self.executor = ThreadPoolExecutor(max_workers=2)
-        self.id = str(id)
         self.driver.get("https://ya.ru/")
-        print("done")
         self.status = 1 # 0 Offline, 1 - wait, 2 - scrolling
         loop = asyncio.get_event_loop()
         if loop.is_running():
             asyncio.create_task(self.wait())
         else:
             loop.run_until_complete(self.wait())
-
-    async def wait(self):
-        while self.status == 1:
-            await asyncio.sleep(3)
-
-
 
     async def wait(self):
         while self.status == 1:
@@ -47,7 +40,7 @@ class Bot():
 
     def load_config(self):
         try:
-            with open("config.json", 'r', encoding='utf-8') as f:
+            with open(self.id + '.json', 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 self.url = data['url']
                 self.proxy = data['proxy']
