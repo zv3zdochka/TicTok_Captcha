@@ -162,9 +162,10 @@ cython_debug/
 
 /captcha_screenshot.png
 /data/
-/img.png
+/im2g.png
 /rubbish.py
 /more_rubbish.py
 /tz.txt
 /php.py
-/img_1.png
+/img2_1.png
+/bots/

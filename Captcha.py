@@ -1,6 +1,5 @@
 import json
 import asyncio
-import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from selenium import webdriver
@@ -19,10 +18,9 @@ class Bot():
         self.status = 0  # 0 - not done 1 - in process 2 - done
         self.captcha = 0  # 0 - init 1 - open login 2 - select type 3 change type 4 - success
         self.chrome_options = self.setup_chrome_options()
-        self.driver = webdriver.Chrome(options=self.chrome_options)
+        self.driver = None
         self.executor = ThreadPoolExecutor(max_workers=2)
-        self.driver.get("https://ya.ru/")
-        self.status = 1 # 0 Offline, 1 - wait, 2 - scrolling
+        self.bot_status = 1  # 0 -in process 1 - created and wait, 2 - logined and scrolling
         loop = asyncio.get_event_loop()
         if loop.is_running():
             asyncio.create_task(self.wait())
@@ -37,10 +35,9 @@ class Bot():
     def stop_bot(self):
         pass
 
-
     def load_config(self):
         try:
-            with open(self.id + '.json', 'r', encoding='utf-8') as f:
+            with open(fr"bots\{self.id}.json", 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 self.url = data['url']
                 self.proxy = data['proxy']
@@ -60,6 +57,7 @@ class Bot():
         options.add_argument('--disable-plugins-discovery')
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument("--start-maximized")
+        #options.add_argument("--headless=new")
         return options
 
     async def get_link(self):
@@ -74,6 +72,33 @@ class Bot():
                                                (By.XPATH, '//*[@id="captcha_container"]/div')))
 
                 print("Капча найдена")
+
+                self.captcha = 1
+
+                await call_operator(await self.get_link())
+
+                await asyncio.sleep(self.delay)
+
+                self.driver.save_screenshot(f"{uuid.uuid4()}.png")
+
+                await asyncio.sleep(self.delay)
+
+                self.captcha = 2
+
+                return True
+            except Exception as e:
+                print(f"Произошла ошибка при поиске капчи: {e}")
+                return False
+
+    async def first_captcha(self):
+        loop = asyncio.get_event_loop()
+        while True:
+            try:
+                await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
+                                           waiter.presence_of_element_located(
+                                               (By.XPATH, '//*[@id="tiktok-verify-ele"]/div')))
+
+                print("")
 
                 self.captcha = 1
 
@@ -198,6 +223,8 @@ class Bot():
         publ.click()
 
     async def main(self):
+        self.bot_status = 0
+        self.driver = webdriver.Chrome(options=self.chrome_options)
         self.driver.delete_all_cookies()
         self.driver.get(self.url)
         await asyncio.sleep(5)
@@ -206,21 +233,13 @@ class Bot():
         button_task = asyncio.create_task(self.clicker())
 
         await captcha_task
-        #await button_task
-
-    def run(self):
-        try:
-            asyncio.run(self.main())
-        finally:
-            self.driver.quit()
+        await button_task
 
 
 if __name__ == "__main__":
     bot = Bot(123123)
     # bot.run()
 
-
 # //*[@id="tiktok-verify-ele"]/div box с капчей
 #
 # //*[@id="verify-bar-close"] его можно закрыть
-
