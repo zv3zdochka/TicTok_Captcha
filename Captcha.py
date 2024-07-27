@@ -7,7 +7,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as waiter
-from Bot import call_operator
 
 
 class Bot():
@@ -19,8 +18,9 @@ class Bot():
         self.captcha = 0  # 0 - init 1 - open login 2 - select type 3 change type 4 - success
         self.chrome_options = self.setup_chrome_options()
         self.driver = None
-        self.executor = ThreadPoolExecutor(max_workers=2)
+        self.executor = ThreadPoolExecutor(max_workers=3)
         self.bot_status = 1  # 0 -in process 1 - created and wait, 2 - logined and scrolling
+        self.com = 'comment text'
         loop = asyncio.get_event_loop()
         if loop.is_running():
             asyncio.create_task(self.wait())
@@ -51,7 +51,7 @@ class Bot():
 
     def setup_chrome_options(self) -> Options:
         options = Options()
-        options.add_argument(f'--proxy-server={self.proxy}')
+        #options.add_argument(f'--proxy-server={self.proxy}')
         options.add_argument('--disable-infobars')
         options.add_argument('--disable-extensions')
         options.add_argument('--disable-plugins-discovery')
@@ -59,9 +59,6 @@ class Bot():
         options.add_argument("--start-maximized")
         #options.add_argument("--headless=new")
         return options
-
-    async def get_link(self):
-        return self.create_link()
 
     async def wait_for_captcha(self):
         loop = asyncio.get_event_loop()
@@ -74,8 +71,6 @@ class Bot():
                 print("Капча найдена")
 
                 self.captcha = 1
-
-                await call_operator(await self.get_link())
 
                 await asyncio.sleep(self.delay)
 
@@ -102,7 +97,6 @@ class Bot():
 
                 self.captcha = 1
 
-                await call_operator(await self.get_link())
 
                 await asyncio.sleep(self.delay)
 
@@ -243,3 +237,6 @@ if __name__ == "__main__":
 # //*[@id="tiktok-verify-ele"]/div box с капчей
 #
 # //*[@id="verify-bar-close"] его можно закрыть
+
+# guger1231
+

@@ -39,7 +39,7 @@ def update_json():
 async def yes(message: types.Message):
     global wait_flag, oper_found, selected, link
     if wait_flag:
-        await message.reply(f"Переходите на сайт {link}", reply_markup=types.ReplyKeyboardRemove())
+        await message.reply(link, reply_markup=types.ReplyKeyboardRemove())
         wait_flag = False
         oper_found = True
         selected = message.chat.id
