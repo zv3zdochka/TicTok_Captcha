@@ -37,23 +37,23 @@ class Master:
         global new_data
         if new_data == 0:
             new_data = 1
-            return 'guger1231', 'Oleg.2006.'
+            return 'captchatester123', 'HelloWorld123!'
 
         else:
-            return 'captchatester123', 'HelloWorld123!'
+            return 'guger1231', 'Oleg.2006.'
+
 
     @staticmethod
     async def rule():
         while True:
-            print("Rule is running...")
             await asyncio.sleep(1)
 
     async def login_to_tt(self):
 
         for id, bot in self.bots.items():
             if bot.bot_status == 1 and id not in self.processing.keys():
-                await self.call_oper()
-                await asyncio.sleep(7)
+                #await self.call_oper()
+                #await asyncio.sleep(7)
                 asyncio.create_task(bot.main())
                 self.processing[id] = bot
                 await asyncio.sleep(30)
@@ -72,7 +72,6 @@ class Server(Master):
     async def find_task(self):
         task = 1
         while True:
-            print(task)
 
             match task:
                 case 1:  # create new bot
@@ -81,24 +80,22 @@ class Server(Master):
                     task += 1
 
                 case 2:  # login bot to tt
-                    await self.new_bot()
-                    print('bot created')
-                    task += 1
-
-                case 3:  # login bot to tt
-
                     await self.login_to_tt()
-                    print('logined to tt')
                     task += 1
 
-                case 4:  # login bot to tt
-                    await self.login_to_tt()
-                    print('logined to tt')
-                    task += 1
-
-                case 5:
+                # case 3:  # login bot to tt
+                #
+                #     await self.login_to_tt()
+                #     print('logined to tt')
+                #     task += 1
+                #
+                # case 4:  # login bot to tt
+                #     await self.login_to_tt()
+                #     print('logined to tt')
+                #     task += 1
+                #
+                case 3:
                     await asyncio.sleep(1)
-                    print("gegegegeg")
 
 
 async def main():
