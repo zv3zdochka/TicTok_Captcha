@@ -32,10 +32,13 @@ class Bot():
     async def wait(self):
         while self.status == 1:
             await asyncio.sleep(3)
-            print('wait')
 
-    def stop_bot(self):
+    async def stop_bot(self):
         pass
+
+    async def to_strim(self, kink):
+        self.model = 1
+        self.driver.get(kink)
 
     def load_config(self):
         try:
@@ -134,6 +137,7 @@ class Bot():
                                                                '//*[@id="loginContainer"]/div[2]/form/button')))
                 login_button.click()
             finally:
+                await asyncio.sleep(3)
                 return
 
 
@@ -194,12 +198,23 @@ class Bot():
                     except Exception as e:
                         print(f"Can't login with error {e}")
                 case 4:
-                    await asyncio.sleep(10)
                     loop = asyncio.get_event_loop()
-                    but = await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
-                                                     waiter.presence_of_element_located((By.XPATH,
-                                                                                         '//*[@id="main-content-explore_page"]/div/div[2]/div/div[1]')))
-                    but.click()
+                    print("here")
+                    await asyncio.sleep(10)
+                    try:
+                        but = await loop.run_in_executor(self.executor, WebDriverWait(self.driver, 5).until,
+                                                         waiter.presence_of_element_located((By.XPATH,
+                                                                                             '//*[@id="main-content-explore_page"]/div/div[2]/div/div[1]')))
+
+                        but.click()
+                    except Exception as e:
+                        print('helly')
+                        but = await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
+                                                         waiter.presence_of_element_located((By.XPATH,
+                                                                                             '/html/body/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[1]/div/div/div[1]')))
+                        but.click()
+                    finally:
+                        pass
                     print('video')
                     await asyncio.sleep(3)
                     self.status = 5
@@ -223,6 +238,8 @@ class Bot():
                     pass  # strim
                 case 2:
                     pass  # exit
+
+            await asyncio.sleep(2)
 
     async def start_live(self):
         while True:
@@ -282,45 +299,3 @@ if __name__ == "__main__":
     print()
     bot = Bot(123123)
     # bot.run()
-
-# //*[@id="tiktok-verify-ele"]/div box с капчей
-#
-# //*[@id="verify-bar-close"] его можно закрыть=
-
-# guger1231
-
-
-# //*[@id="app"]/div[2]/div[1]/div/div[2]/div/div[1]/div/nav/ul/li[1]/div/a
-# домик
-
-# //*[@id="main-content-explore_page"]/div/div[2]/div/div[1]/div[1] video
-
-# //*[@id="app"]/div[2]/div[4]/div/div[2]/div[1]/div/div[1]/div[2]/div/div[1]/div[1]/button[1] like
-
-# //*[@id="app"]/div[2]/div[4]/div/div[2]/div[2]/div/div[1]/div comment
-
-# //*[@id="app"]/div[2]/div[4]/div/div[2]/div[2]/div/div[2] publish comment
-
-# //*[@id="app"]/div[2]/div[4]/div/div[1]/button[3] next video
-
-
-# //*[@id="app"]/div[2]/div[4]/div/div[2]/div[2]/div/div[1]/div/div[1]/div
-# comment
-
-# //*[@id="app"]/div[2]/div[4]/div/div[1]/button[3] next
-
-
-# redirect
-# //*[@id="app"]/div[2]/div[1]/div/div[2]/div/div[1]/div/nav/ul/li[1]/div/a
-
-# like
-# //*[@id="main-content-homepage_hot"]/div[1]/div[1]/div/div/div[2]/button[1]
-
-# comment
-# //*[@id="main-content-homepage_hot"]/div[1]/div[1]/div/div/div[2]/button[2]
-
-# like after comment
-# //*[@id="app"]/div[2]/div[4]/div/div[2]/div[1]/div/div[1]/div[2]/div/div[1]/div[1]/button[1]
-
-# next
-# //*[@id="app"]/div[2]/div[4]/div/div[1]/button[3]

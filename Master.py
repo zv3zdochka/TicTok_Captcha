@@ -11,8 +11,8 @@ new_data = 0
 class Master:
     def __init__(self):
         self.bots = {}
-        self.online = {}
-        self.processing = {}
+        self.logining = []
+        self.on_strim = []
         self.anydesk_id = 1960037423
         self.anydesk_pass = "helloboba12"
 
@@ -42,6 +42,8 @@ class Master:
         else:
             return 'guger1231', 'Oleg.2006.'
 
+    def get_strim_link(self):
+        return "https://vt.tiktok.com/ZSYT6ekr9/"
 
     @staticmethod
     async def rule():
@@ -49,15 +51,22 @@ class Master:
             await asyncio.sleep(1)
 
     async def login_to_tt(self):
-
         for id, bot in self.bots.items():
-            if bot.bot_status == 1 and id not in self.processing.keys():
-                #await self.call_oper()
-                #await asyncio.sleep(7)
+            if bot.bot_status == 1 and id not in self.logining:
+                # await self.call_oper()
+                # await asyncio.sleep(7)
                 asyncio.create_task(bot.main())
-                self.processing[id] = bot
-                await asyncio.sleep(30)
+                self.logining.append(id)
+                await asyncio.sleep(10)
                 print(f"Task for bot {id} has been started.")
+                self.logining.remove(id)
+                break
+
+    async def to_strim(self):
+        for id, bot in self.bots.items():
+            if bot.bot_status == 0 and id not in self.logining and id not in self.on_strim:
+                await asyncio.create_task(bot.to_strim(self.get_strim_link()))
+                self.on_strim.append(id)
                 break
 
     async def call_oper(self):
@@ -71,8 +80,9 @@ class Server(Master):
 
     async def find_task(self):
         task = 1
+        n = 0
         while True:
-
+            print(task)
             match task:
                 case 1:  # create new bot
                     await self.new_bot()
@@ -81,21 +91,17 @@ class Server(Master):
 
                 case 2:  # login bot to tt
                     await self.login_to_tt()
+                    print('logined')
                     task += 1
 
-                # case 3:  # login bot to tt
-                #
-                #     await self.login_to_tt()
-                #     print('logined to tt')
-                #     task += 1
-                #
-                # case 4:  # login bot to tt
-                #     await self.login_to_tt()
-                #     print('logined to tt')
-                #     task += 1
-                #
-                case 3:
-                    await asyncio.sleep(1)
+                case 3: # send bot to strim
+                    if n == 30:
+                        print('starting strimming')
+                        await asyncio.sleep(15)
+                        await self.to_strim()
+                    n += 1
+                    await asyncio.sleep(2)
+
 
 
 async def main():
@@ -109,3 +115,5 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+
