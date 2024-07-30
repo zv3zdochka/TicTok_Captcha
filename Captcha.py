@@ -2,6 +2,7 @@ import json
 import asyncio
 import uuid
 import random
+import pickle
 from concurrent.futures import ThreadPoolExecutor
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -11,9 +12,10 @@ from selenium.webdriver.support import expected_conditions as waiter
 
 
 class Bot():
-    def __init__(self, id):
-        self.url, self.proxy, self.login_data, self.password_data, self.timeout, self.delay, self.cookie = None, None, None, None, None, None, None
+    def __init__(self, id, cookie):
+        self.url, self.proxy, self.login_data, self.password_data, self.timeout, self.delay = None, None, None, None, None, None
         self.id = str(id)
+        self.cookie = cookie
         self.load_config()
         self.status = 0  # 0 - not done 1 - in process 2 - done
         self.captcha = 0  # 0 - init 1 - open login 2 - select type 3 change type 4 - typped 5 - successful login
@@ -22,7 +24,8 @@ class Bot():
         self.executor = ThreadPoolExecutor(max_workers=3)
         self.bot_status = 1  # 0 -in process 1 - created and wait, 2 - logined and scrolling
         self.com = 'comment text'
-        self.model = 0  # 0 swapping & like & comment, 1 - enter strim 
+        self.model = 0  # 0 swapping & like & comment, 1 - enter strim
+
         loop = asyncio.get_event_loop()
         if loop.is_running():
             asyncio.create_task(self.wait())
@@ -34,7 +37,8 @@ class Bot():
             await asyncio.sleep(3)
 
     async def stop_bot(self):
-        pass
+        pickle.dump(self.driver.get_cookies(), open(f"{self.id}.pkl", "wb"))
+
 
     async def to_strim(self, kink):
         self.model = 1
@@ -57,13 +61,16 @@ class Bot():
 
     def setup_chrome_options(self) -> Options:
         options = Options()
-        # options.add_argument(f'--proxy-server={self.proxy}')
+        options.add_argument(f'--proxy-server={self.proxy}')
         options.add_argument('--disable-infobars')
         options.add_argument('--disable-extensions')
         options.add_argument('--disable-plugins-discovery')
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument("--start-maximized")
         # options.add_argument("--headless=new")
+        for cookie in self.cookie:
+            self.driver.add_cookie(cookie)
+
         return options
 
     async def wait_for_captcha(self):

@@ -3,6 +3,7 @@ import uuid
 import json
 from Captcha import Bot
 from Bot import call_operator
+import pickle
 
 # temp
 new_data = 0
@@ -30,7 +31,9 @@ class Master:
         with open(fr"bots\{str(id)}.json", 'w') as f:
             json.dump(data, f)
 
-        bot = Bot(id)
+        cookies = pickle.load(open("cookies.pkl", "rb"))
+
+        bot = Bot(id, cookies)
         self.bots[id] = bot
 
     def get_new_data(self):
