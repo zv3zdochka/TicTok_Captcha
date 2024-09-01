@@ -9,6 +9,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as waiter
+import requests
+from io import BytesIO
+import base64
 
 
 class Bot():
@@ -39,7 +42,6 @@ class Bot():
     async def stop_bot(self):
         pickle.dump(self.driver.get_cookies(), open(f"{self.id}.pkl", "wb"))
 
-
     async def to_strim(self, kink):
         self.model = 1
         self.driver.get(kink)
@@ -68,8 +70,8 @@ class Bot():
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_argument("--start-maximized")
         # options.add_argument("--headless=new")
-        for cookie in self.cookie:
-            self.driver.add_cookie(cookie)
+        # for cookie in self.cookie:
+        #     self.driver.add_cookie(cookie)
 
         return options
 
@@ -79,25 +81,26 @@ class Bot():
             try:
                 await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
                                            waiter.presence_of_element_located(
-                                               (By.XPATH, '//*[@id="captcha_container"]/div')))
+                                               (By.CLASS_NAME, "captcha_verify_container")))
                 print("Капча найдена")
-                self.captcha = 1
-                await asyncio.sleep(self.delay)
-                self.driver.save_screenshot(f"{uuid.uuid4()}.png")
-                await asyncio.sleep(self.delay)
-                self.captcha = 2
-                return True
-            except Exception as e:
-                print(f"Произошла ошибка при поиске капчи: {e}")
-                return False
 
-    async def first_captcha(self):
-        loop = asyncio.get_event_loop()
-        while True:
-            try:
-                await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
-                                           waiter.presence_of_element_located(
-                                               (By.XPATH, '//*[@id="tiktok-verify-ele"]/div')))
+                await asyncio.sleep(3)
+
+                elements_with_src = self.driver.find_elements(By.XPATH, '//*[@src]')
+
+                # Список для хранения ссылок на ресурсы
+                src_urls = []
+
+                # Проход по всем найденным элементам
+                for element in elements_with_src:
+                    src = element.get_attribute('src')
+                    if "captcha" in str(src):
+                        src_urls.append(src)
+                        print(src)
+
+                print("::::::::::::::::::::::")
+                print(len(src_urls))
+
                 self.captcha = 1
                 await asyncio.sleep(self.delay)
                 self.driver.save_screenshot(f"{uuid.uuid4()}.png")

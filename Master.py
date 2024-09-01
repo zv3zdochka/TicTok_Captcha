@@ -100,8 +100,8 @@ class Server(Master):
                 case 3: # send bot to strim
                     if n == 30:
                         print('starting strimming')
-                        await asyncio.sleep(15)
-                        await self.to_strim()
+                        await asyncio.sleep(150)
+                        #await self.to_strim()
                     n += 1
                     await asyncio.sleep(2)
 
