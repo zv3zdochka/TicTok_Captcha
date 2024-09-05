@@ -1,6 +1,5 @@
 import json
 import asyncio
-import uuid
 import random
 import pickle
 from concurrent.futures import ThreadPoolExecutor
@@ -9,12 +8,16 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as waiter
-import requests
-from io import BytesIO
-import base64
+from selenium_authenticated_proxy import SeleniumAuthenticatedProxy
+from selenium.common.exceptions import TimeoutException
+from Capguru import Cap
 
 
-class Bot():
+class IncorrectNumberOfCaptchaImages(Exception):
+    pass
+
+
+class Bot:
     def __init__(self, id, cookie):
         self.url, self.proxy, self.login_data, self.password_data, self.timeout, self.delay = None, None, None, None, None, None
         self.id = str(id)
@@ -27,7 +30,9 @@ class Bot():
         self.executor = ThreadPoolExecutor(max_workers=3)
         self.bot_status = 1  # 0 -in process 1 - created and wait, 2 - logined and scrolling
         self.com = 'comment text'
-        self.model = 0  # 0 swapping & like & comment, 1 - enter strim
+        self.strim_link = "https://vt.tiktok.com/ZS2ydkD4g/"
+        self.proxy_login, self.proxy_password, self.proxy_cr = None, None, None
+        self.model = 0  # 0 swapping & like & comment, 1 - on strim
 
         loop = asyncio.get_event_loop()
         if loop.is_running():
@@ -42,38 +47,69 @@ class Bot():
     async def stop_bot(self):
         pickle.dump(self.driver.get_cookies(), open(f"{self.id}.pkl", "wb"))
 
-    async def to_strim(self, kink):
+    async def enter_strim(self):
         self.model = 1
-        self.driver.get(kink)
+        self.driver.get(self.strim_link)
+        await asyncio.sleep(10)
 
     def load_config(self):
         try:
             with open(fr"bots\{self.id}.json", 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 self.url = data['url']
-                self.proxy = data['proxy']
                 self.login_data = data['login']
                 self.password_data = data['password']
                 self.timeout = data['timeout']
                 self.delay = data['delay']
-
+                self.proxy_login = data['proxy_login']
+                self.proxy_password = data['proxy_password']
+                self.proxy_cr = data['proxy_cr']
 
         except Exception as e:
             exit(f"Fail on loading file {e}")
 
     def setup_chrome_options(self) -> Options:
+
         options = Options()
-        options.add_argument(f'--proxy-server={self.proxy}')
+
         options.add_argument('--disable-infobars')
-        options.add_argument('--disable-extensions')
         options.add_argument('--disable-plugins-discovery')
         options.add_argument('--disable-blink-features=AutomationControlled')
-        options.add_argument("--start-maximized")
-        # options.add_argument("--headless=new")
+        # options.add_argument("--start-maximized")
+        # options.add_argument("--headless=new") #  don't change new, because it'll break the proxy
+
+        proxy_helper = SeleniumAuthenticatedProxy(
+            proxy_url=f"http://{self.proxy_login}:{self.proxy_password}@{self.proxy_cr}")
+
+        # Enrich Chrome options with proxy authentication
+        proxy_helper.enrich_chrome_options(options)
+
         # for cookie in self.cookie:
         #     self.driver.add_cookie(cookie)
 
         return options
+
+    async def load_error_check(self):
+        """
+
+        fix this shit
+
+        :return:
+        """
+        loop = asyncio.get_event_loop()
+        while True:
+            try:
+                print("herer")
+                login_button = await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
+                                                          waiter.element_to_be_clickable(
+                                                              (By.XPATH,
+                                                               '//*[@id="loginContainer"]/div/div[2]/button[2]')))
+                login_button.click()
+                print("cookie agree")
+                await asyncio.sleep(5)
+
+            except TimeoutException:
+                pass
 
     async def wait_for_captcha(self):
         loop = asyncio.get_event_loop()
@@ -84,27 +120,48 @@ class Bot():
                                                (By.CLASS_NAME, "captcha_verify_container")))
                 print("Капча найдена")
 
-                await asyncio.sleep(3)
+                await asyncio.sleep(7)
+
+                captcha_element = self.driver.find_element(By.CLASS_NAME, "captcha_verify_container")
+                captcha_rect = captcha_element.location
+                print(f"Координаты капчи: {captcha_rect}")
+                print(f"Размеры капчи: {captcha_element.size}")
 
                 elements_with_src = self.driver.find_elements(By.XPATH, '//*[@src]')
 
-                # Список для хранения ссылок на ресурсы
                 src_urls = []
-
-                # Проход по всем найденным элементам
                 for element in elements_with_src:
                     src = element.get_attribute('src')
-                    if "captcha" in str(src):
+                    f = str(src)
+                    if "captcha" in f and (
+                            f.endswith(".jpeg") or f.endswith(".png") or f.endswith('.jpg')) or f.endswith(".image"):
                         src_urls.append(src)
-                        print(src)
 
-                print("::::::::::::::::::::::")
-                print(len(src_urls))
+                if len(src_urls) == 2:
+                    print('koleso')
+                    C = Cap(src_urls, 'koleso')
+
+                elif len(src_urls) == 1:
+                    print(src_urls)
+                    if src_urls[0].endswith(".image"):
+                        print('abc')
+                        C = Cap(src_urls, 'abc')
+                    else:
+                        print('slider')
+                        C = Cap(src_urls, 'slider')
+                else:
+                    raise IncorrectNumberOfCaptchaImages
+
+                try:
+                    answer = await C.send()
+                    print(answer)
+                except Exception as e:
+                    print(e)
 
                 self.captcha = 1
                 await asyncio.sleep(self.delay)
-                self.driver.save_screenshot(f"{uuid.uuid4()}.png")
-                await asyncio.sleep(self.delay)
+                # self.driver.save_screenshot(f"{uuid.uuid4()}.png")
+                # await asyncio.sleep(self.delay)
                 self.captcha = 2
                 return True
             except Exception as e:
@@ -239,13 +296,15 @@ class Bot():
                     t = random.randrange(2, 7)
                     await asyncio.sleep(t)
                     if t == random.randrange(1, 20):
-                        await self.like()
-                    # if t == random.randrange(1, 100):
-                    #     await self.comment()
+                        await self.swap_like()
+                    if t == random.randrange(1, 100):
+                        await self.swap_comment()
                     await self.swap()
 
                 case 1:
-                    pass  # strim
+                    print("On strim")
+                    await asyncio.sleep(5)
+
                 case 2:
                     pass  # exit
 
@@ -261,7 +320,7 @@ class Bot():
             else:
                 await asyncio.sleep(5)
 
-    async def like(self):
+    async def swap_like(self):
         loop = asyncio.get_event_loop()
         but = await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
                                          waiter.presence_of_element_located((By.XPATH,
@@ -277,7 +336,7 @@ class Bot():
         print('swap')
         but.click()
 
-    async def comment(self):
+    async def swap_comment(self):
         loop = asyncio.get_event_loop()
 
         box = await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
@@ -300,12 +359,10 @@ class Bot():
         captcha_task = asyncio.create_task(self.wait_for_captcha())
         button_task = asyncio.create_task(self.clicker())
         online_task = asyncio.create_task(self.start_live())
-        await captcha_task
-        await button_task
-        await online_task
+        agree_task = asyncio.create_task(self.load_error_check())
+
+        await asyncio.gather(agree_task, captcha_task, button_task, online_task)
 
 
 if __name__ == "__main__":
     print()
-    bot = Bot(123123)
-    # bot.run()

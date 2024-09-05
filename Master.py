@@ -5,72 +5,86 @@ from Captcha import Bot
 from Bot import call_operator
 import pickle
 
-# temp
-new_data = 0
-
 
 class Master:
     def __init__(self):
         self.bots = {}
-        self.logining = []
+
+        self.processing = []
+        self.online = []
         self.on_strim = []
+
         self.anydesk_id = 1960037423
         self.anydesk_pass = "helloboba12"
 
     async def new_bot(self):
         id = uuid.uuid4()
-        new_data = self.get_new_data()
+
+        credentials = self.get_new_data()
+
         data = {"url": "https://tiktok.com",
                 "id": str(id),
-                "proxy": "35.185.196.38:3128",
-                "login": new_data[0],
-                "password": new_data[1],
+                "proxy_cr": "83.171.234.72:30041",
+                "login": credentials[0],
+                "password": credentials[1],
                 "timeout": 60,
-                "delay": 5}
+                "delay": 5,
+                'proxy_password': "96f869afe5",
+                'proxy_login': "f9c66f96"
+                }
+
 
         with open(fr"bots\{str(id)}.json", 'w') as f:
             json.dump(data, f)
 
-        cookies = pickle.load(open("cookies.pkl", "rb"))
+        try:
+            cookies = pickle.load(open(fr"bots\{str(id)}.pkl", "rb"))
+        except FileNotFoundError:
+            cookies = None
 
         bot = Bot(id, cookies)
         self.bots[id] = bot
 
-    def get_new_data(self):
-        global new_data
-        if new_data == 0:
-            new_data = 1
-            return 'captchatester123', 'HelloWorld123!'
+        return
 
-        else:
-            return 'guger1231', 'Oleg.2006.'
 
-    def get_strim_link(self):
+    @staticmethod
+    def get_new_data():
+        return 'guger1231', 'Oleg.2006.'
+        #return 'captchatester123', 'HelloWorld123!'
+
+
+    @staticmethod
+    def get_strim_link():
         return "https://vt.tiktok.com/ZSYT6ekr9/"
+
 
     @staticmethod
     async def rule():
         while True:
+            print('Search')
             await asyncio.sleep(1)
 
     async def login_to_tt(self):
         for id, bot in self.bots.items():
-            if bot.bot_status == 1 and id not in self.logining:
-                # await self.call_oper()
-                # await asyncio.sleep(7)
-                asyncio.create_task(bot.main())
-                self.logining.append(id)
-                await asyncio.sleep(10)
+            if bot.bot_status == 1 and id not in self.processing:  # bot is created and ready to work
+
+                # noinspection PyAsyncCall
+                await asyncio.create_task(bot.main())
+
+                self.processing.append(id)
+                await asyncio.sleep(60)
                 print(f"Task for bot {id} has been started.")
-                self.logining.remove(id)
-                break
+                self.processing.remove(id)
+                self.online.append(id)
+                return
 
     async def to_strim(self):
         for id, bot in self.bots.items():
-            if bot.bot_status == 0 and id not in self.logining and id not in self.on_strim:
-                await asyncio.create_task(bot.to_strim(self.get_strim_link()))
+            if bot.bot_status == 0 and id not in self.processing and id not in self.on_strim and id in self.online:
+                await asyncio.create_task(bot.enter_strim())
                 self.on_strim.append(id)
-                break
+                return
 
     async def call_oper(self):
         await call_operator(
@@ -83,40 +97,34 @@ class Server(Master):
 
     async def find_task(self):
         task = 1
-        n = 0
         while True:
-            print(task)
+            print(f"Task {task}")
             match task:
                 case 1:  # create new bot
                     await self.new_bot()
-                    print('bot created')
+                    print('Bot created')
                     task += 1
 
                 case 2:  # login bot to tt
                     await self.login_to_tt()
-                    print('logined')
+                    print('Bot login')
                     task += 1
 
-                case 3: # send bot to strim
-                    if n == 30:
-                        print('starting strimming')
-                        await asyncio.sleep(150)
-                        #await self.to_strim()
-                    n += 1
-                    await asyncio.sleep(2)
+                case 3:  # send bot to strim
+                    await self.to_strim()
+                    print('Enter Strim')
 
+            await asyncio.sleep(1)
 
 
 async def main():
-    M = Master()
-    S = Server()
+    m = Master()
+    s = Server()
     await asyncio.gather(
-        M.rule(),
-        S.find_task()
+        m.rule(),
+        s.find_task()
     )
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-
-
