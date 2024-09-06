@@ -177,3 +177,6 @@ cython_debug/
 /hello.txt
 /capgru.py
 /Puzzle-Captcha-Solver/xpath
+/test.py
+/tester.py
+/TODO

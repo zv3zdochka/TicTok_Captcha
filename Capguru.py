@@ -1,70 +1,135 @@
+import asyncio
+
 import requests
 import base64
-import asyncio
+import re
 
 
 class IncorrectNumberOfImages(Exception):
-    pass
+    def __init__(self, message="Expected 1 or 2 images, but received a different amount."):
+        super().__init__(message)
 
 
-class CaptchaError(Exception):
-    pass
+class ServerError(Exception):
+    def __init__(self, message="Server error. Please check the requests and response status."):
+        super().__init__(message)
+
+
+class KolesoCaptchaError(Exception):
+    def __init__(self, message="Koleso captcha error."):
+        super().__init__(message)
+
+
+class PuzzleCaptchaError(Exception):
+    def __init__(self, message="Puzzle captcha error."):
+        super().__init__(message)
+
+
+class ABCCaptchaError(Exception):
+    def __init__(self, message="ABC captcha error."):
+        super().__init__(message)
+
+
+class Again:
+    def __init__(self, message="Try another CAPTCHA."):
+        super().__init__(message)
 
 
 class Cap:
-    def __init__(self, url: list, type_of_captcha: str):
+    def __init__(self, urls: list, captcha_type: str):
         self.key = "b18d37139a45ab6b89503345b4b521b3"
-        if len(url) not in [1, 2]:
+        self.captcha_type = captcha_type
+        self.data = urls
+        self.counter = 0
+        self.payload = {'textinstructions': self.captcha_type, 'click': 'geetest', 'key': self.key, 'method': 'base64'}
+        self.__preprocess_data()
+
+    def __preprocess_data(self, again=False):
+        if again:
+            im1 = self.payload.get('body0')
+            im2 = self.payload.get('body1')
+
+            self.payload['body0'] = im2
+            self.payload['body1'] = im1
+            return
+
+        if len(self.data) == 1:
+            en_im_1 = base64.b64encode(self.data[0].encode())
+            self.payload['body'] = en_im_1
+
+        elif len(self.data) == 2:
+            en_im_1 = base64.b64encode(self.data[0].encode())
+            en_im_2 = base64.b64encode(self.data[1].encode())
+
+            self.payload['body0'] = en_im_1
+            self.payload['body1'] = en_im_2
+
+        else:
             raise IncorrectNumberOfImages
-        if len(url) == 1:
-            self.url = url[0]
-            self.url_1 = None
-        else:
-            self.url = url[0]
-            self.url_1 = url[1]
-        self.captcha = type_of_captcha
 
-    async def send(self):
-        if self.url_1:
-            print(self.url_1)
-            print(self.url)
-            response = requests.get(self.url)
-            ee = base64.b64encode(response.content)
+    async def __solve(self) -> str | int:
+        r = requests.post("http://api.cap.guru/in.php", data=self.payload)
 
-            response_1 = requests.get(self.url_1)
-            ee_1 = base64.b64encode(response_1.content)
+        await asyncio.sleep(8)
 
-            payload = {'textinstructions': self.captcha, 'click': 'geetest', 'key': self.key, 'method': 'base64',
-                       'body0': ee, "body1": ee_1}
-        else:
-            print(self.url_1)
-            response = requests.get(self.url)
-            ee = base64.b64encode(response.content)
+        if "OK" not in r.text:
+            raise ServerError
 
-            payload = {'textinstructions': self.captcha, 'click': 'geetest', 'key': self.key, 'method': 'base64',
-                       'body': ee}
-
-        r = requests.post("http://api.cap.guru/in.php", data=payload)
-        print("wait")
-        await asyncio.sleep(10)
         rt = r.text.split('|')
         url = 'http://api.cap.guru/res.php?key=' + self.key + '&id=' + rt[1]
 
-        response = requests.get(url).text
-        if not response:
-            while response == '':
-                await asyncio.sleep(10)
-                rt = r.text.split('|')
-                url = 'http://api.cap.guru/res.php?key=' + self.key + '&id=' + rt[1]
-                response = requests.get(url).text
+        while self.counter != 3:
+            response = requests.get(url).text
+            print(response)
+            if response == "CAPCHA_NOT_READY":
+                await asyncio.sleep(2)
+                continue
+            elif response == "ERROR_CAPTCHA_UNSOLVABLE":
+                self.counter += 1
+                return -1
+            elif "OK" in response:
+                return response
+            break
+        return 0
 
-        print(response)
-        return response
+    async def send(self):
+        out = await self.__solve()
+        while True:
+            if out == -1:
+                self.__preprocess_data(again=True)
+                out = await self.__solve()
+            elif out == 0:
+                return Again
+            else:
+                # noinspection PyTypeChecker
+                output = [(int(x), int(y)) for x, y in re.findall(r"x=(\d+),y=(\d+)", out)]
+                print(output)
+                break
+        if self.captcha_type == 'koleso':
+            if len(output) != 1:
+                raise KolesoCaptchaError
+            return max(output[0])
+        elif self.captcha_type == "abc":
+            if len(output) != 2:
+                raise ABCCaptchaError
+            return output
+        elif self.captcha_type == "puzzle":
+            if False:
+                raise PuzzleCaptchaError
+            return output
 
 
 if __name__ == "__main__":
-    C = Cap([
-        "https://p16-rc-captcha-useast2a.tiktokcdn-eu.com/tos-useast2a-i-447w7jt563-euttp/a166216c69fe437cb0a45e0d29da0b11~tplv-447w7jt563-2.jpeg",
-        "https://p19-rc-captcha-useast2a.tiktokcdn-eu.com/tos-useast2a-i-447w7jt563-euttp/73ff3232923643b48eb04b21b782a599~tplv-447w7jt563-2.jpeg"],
-            'koleso')
-    asyncio.run(C.send())
+    url1 = 'https://p19-rc-captcha-useast2a.tiktokcdn-eu.com/tos-useast2a-i-447w7jt563-euttp/8ff1d4f696084cad95f6ddbdaa0809de~tplv-447w7jt563-2.jpeg'
+
+    url2 = 'https://p19-rc-captcha-useast2a.tiktokcdn-eu.com/tos-useast2a-i-447w7jt563-euttp/33caed8d2f0546d2b728ab32ddaa9e75~tplv-447w7jt563-2.jpeg'
+
+    puzzle = rf"C:\Users\batsi\PycharmProjects\TicTok_Captha\data\img_1.png"
+
+    abc = rf"https://p16-security-sg.ibyteimg.com/img/security-captcha-oversea-singapore/3d_c0899f7bd5ce8470ae4fa7bda6df3e10345f44d7_1_2.jpg~tplv-obj.image"
+
+    img = [
+        abc
+    ]
+    C = Cap(img, 'abc')
+    print(asyncio.run(C.send()))

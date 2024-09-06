@@ -52,6 +52,7 @@ class Master:
     def get_new_data():
         return 'guger1231', 'Oleg.2006.'
         #return 'captchatester123', 'HelloWorld123!'
+        #return "", "Hello.World.123"
 
 
     @staticmethod
@@ -70,7 +71,7 @@ class Master:
             if bot.bot_status == 1 and id not in self.processing:  # bot is created and ready to work
 
                 # noinspection PyAsyncCall
-                await asyncio.create_task(bot.main())
+                await asyncio.create_task(bot.start_bot())
 
                 self.processing.append(id)
                 await asyncio.sleep(60)
@@ -128,3 +129,8 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
+"""
+https://p16-security-sg.ibyteimg.com/img/security-captcha-oversea-singapore/3d_c0899f7bd5ce8470ae4fa7bda6df3e10345f44d7_1_2.jpg~tplv-obj.image
+
+"""
