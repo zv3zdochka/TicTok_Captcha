@@ -54,7 +54,8 @@ class Cap:
             return
 
         if len(self.data) == 1:
-            en_im_1 = base64.b64encode(self.data[0].encode())
+
+            en_im_1 = base64.b64encode(requests.get(self.data[0]).content)
             self.payload['body'] = en_im_1
 
         elif len(self.data) == 2:
@@ -80,7 +81,6 @@ class Cap:
 
         while self.counter != 3:
             response = requests.get(url).text
-            print(response)
             if response == "CAPCHA_NOT_READY":
                 await asyncio.sleep(2)
                 continue
@@ -99,22 +99,27 @@ class Cap:
                 self.__preprocess_data(again=True)
                 out = await self.__solve()
             elif out == 0:
-                return Again
+                return 0
             else:
                 # noinspection PyTypeChecker
-                output = [(int(x), int(y)) for x, y in re.findall(r"x=(\d+),y=(\d+)", out)]
-                print(output)
+                if 'w' not in out:
+                    output = [(int(x), int(y)) for x, y in re.findall(r"x=(\d+),y=(\d+)", out)]
+                else:
+                    output = [(int(x), int(y), int(w)) for x, y, w in re.findall(r"x=(\d+),y=(\d+),w=(\d+)", out)]
                 break
+
         if self.captcha_type == 'koleso':
             if len(output) != 1:
                 raise KolesoCaptchaError
             return max(output[0])
+
         elif self.captcha_type == "abc":
-            if len(output) != 2:
+            if len(output[0]) != 2:
                 raise ABCCaptchaError
             return output
-        elif self.captcha_type == "puzzle":
-            if False:
+
+        elif self.captcha_type == "slider":
+            if len(output[0]) != 3:
                 raise PuzzleCaptchaError
             return output
 
@@ -124,12 +129,12 @@ if __name__ == "__main__":
 
     url2 = 'https://p19-rc-captcha-useast2a.tiktokcdn-eu.com/tos-useast2a-i-447w7jt563-euttp/33caed8d2f0546d2b728ab32ddaa9e75~tplv-447w7jt563-2.jpeg'
 
-    puzzle = rf"C:\Users\batsi\PycharmProjects\TicTok_Captha\data\img_1.png"
-
+    puzzle = rf"https://p16-rc-captcha-useast2a.tiktokcdn-eu.com/tos-useast2a-i-447w7jt563-euttp/b75bd59c5c614ce2a250ff0dcf4879e3~tplv-447w7jt563-2.jpeg"
+    puzzle_1 = rf"https://p16-rc-captcha-useast2a.tiktokcdn-eu.com/tos-useast2a-i-447w7jt563-euttp/32595089eb1a4d67bbe86d674dac72b7~tplv-447w7jt563-2.jpeg"
     abc = rf"https://p16-security-sg.ibyteimg.com/img/security-captcha-oversea-singapore/3d_c0899f7bd5ce8470ae4fa7bda6df3e10345f44d7_1_2.jpg~tplv-obj.image"
 
     img = [
-        abc
+        puzzle_1
     ]
-    C = Cap(img, 'abc')
+    C = Cap(img, 'slider')
     print(asyncio.run(C.send()))

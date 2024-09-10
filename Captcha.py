@@ -16,7 +16,8 @@ import uuid
 
 
 class IncorrectNumberOfCaptchaImages(Exception):
-    pass
+    def __init__(self, message="Incorrect number of images registered in CAPTCHA."):
+        super().__init__(message)
 
 
 class Bot:
@@ -65,6 +66,8 @@ class Bot:
 
         options.add_argument('--disable-infobars')
         options.add_argument('--disable-plugins-discovery')
+        options.add_argument('disable-notifications')
+
         options.add_argument('--disable-blink-features=AutomationControlled')
         # options.add_argument("--start-maximized")
         # options.add_argument("--headless=new") #  don't change new, because it'll break the proxy
@@ -81,12 +84,6 @@ class Bot:
         return options
 
     async def load_error_check(self):
-        """
-
-        fix this shit
-
-        :return:
-        """
         loop = asyncio.get_event_loop()
         while True:
             try:
@@ -94,7 +91,9 @@ class Bot:
                 login_button = await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
                                                           waiter.element_to_be_clickable(
                                                               (By.XPATH,
-                                                               '//*[@id="loginContainer"]/div/div[2]/button[2]')))
+                                                               '/html/body/tiktok-cookie-banner//div/div[2]/button[2]')))
+                print("found")
+                await asyncio.sleep(1)
                 login_button.click()
                 print("cookie agree")
                 await asyncio.sleep(5)
@@ -109,15 +108,8 @@ class Bot:
                 await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
                                            waiter.presence_of_element_located(
                                                (By.CLASS_NAME, "captcha_verify_container")))
-                print("Капча найдена")
-
-                await asyncio.sleep(7)
-
-                captcha_element = self.driver.find_element(By.CLASS_NAME, "captcha_verify_container")
-                captcha_rect = captcha_element.location
-                print(f"Координаты капчи: {captcha_rect}")
-                print(f"Размеры капчи: {captcha_element.size}")
-
+                print("Found CAPTCHA")
+                await asyncio.sleep(3)
                 elements_with_src = self.driver.find_elements(By.XPATH, '//*[@src]')
 
                 src_urls = []
@@ -125,21 +117,23 @@ class Bot:
                     src = element.get_attribute('src')
                     f = str(src)
                     if "captcha" in f and (
-                            f.endswith(".jpeg") or f.endswith(".png") or f.endswith('.jpg')) or f.endswith(".image"):
+                            f.endswith(".jpeg") or f.endswith('.jpg')) or f.endswith(".image"):
                         src_urls.append(src)
                         print(src)
 
                 if len(src_urls) == 2:
                     print('koleso')
+                    self.captcha_type = 'koleso'
                     C = Cap(src_urls, 'koleso')
 
                 elif len(src_urls) == 1:
-                    print(src_urls)
                     if src_urls[0].endswith(".image"):
                         print('abc')
+                        self.captcha_type = 'abc'
                         C = Cap(src_urls, 'abc')
                     else:
                         print('slider')
+                        self.captcha_type = 'slider'
                         C = Cap(src_urls, 'slider')
                 else:
                     raise IncorrectNumberOfCaptchaImages
@@ -150,18 +144,33 @@ class Bot:
                 except Exception as e:
                     print(e)
 
-                await self.drag_slider(int(answer))
+                if answer == 0:
+                    n = 0
+                    while n != 2:
+                        pass
+                    # обновить капчу и попытаться еще разок
+
+                if self.captcha_type == "koleso":
+                    await self.drag_slider(int(answer))
+
+                elif self.captcha_type == "abc":
+                    captcha_element = self.driver.find_element(By.CLASS_NAME, "captcha_verify_image")
+                    captcha_rect = captcha_element.location
+                    print(f"Координаты капчи: {captcha_rect}")
+                    print(f"Размеры капчи: {captcha_element.size}")
+
+                elif self.captcha_type == "slider":
+                    await self.drag_slider(int(answer[0] + answer[2] / 2))
 
                 self.captcha = 1
                 await asyncio.sleep(self.delay)
-                self.driver.save_screenshot(f"{uuid.uuid4()}.png")
-                await asyncio.sleep(self.delay)
+                # self.driver.save_screenshot(f"{uuid.uuid4()}.png")
+                # await asyncio.sleep(self.delay)
                 self.captcha = 2
                 return True
             except Exception as e:
                 print(f"Произошла ошибка при поиске капчи: {e}")
                 return False
-
 
     async def login(self):
         loop = asyncio.get_event_loop()

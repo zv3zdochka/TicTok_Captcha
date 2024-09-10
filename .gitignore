@@ -180,3 +180,6 @@ cython_debug/
 /test.py
 /tester.py
 /TODO
+/Proxy_browser.py
+/CAPTCHA_TEST_1.py
+/Adata
