@@ -84,6 +84,10 @@ class Bot:
         return options
 
     async def load_error_check(self):
+        """
+        proxy error
+        :return:
+        """
         loop = asyncio.get_event_loop()
         while True:
             try:
@@ -105,25 +109,28 @@ class Bot:
         loop = asyncio.get_event_loop()
         while self.captcha != 2:
             try:
+                # Ожидание появления капчи
                 await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
                                            waiter.presence_of_element_located(
                                                (By.CLASS_NAME, "captcha_verify_container")))
-                print("Found CAPTCHA")
+                print("Найдена CAPTCHA")
                 await asyncio.sleep(3)
+
+                # Получение всех элементов с атрибутом src
                 elements_with_src = self.driver.find_elements(By.XPATH, '//*[@src]')
 
                 src_urls = []
                 for element in elements_with_src:
                     src = element.get_attribute('src')
-                    f = str(src)
-                    if "captcha" in f and (
-                            f.endswith(".jpeg") or f.endswith('.jpg')) or f.endswith(".image"):
+                    if "captcha" in src and (src.endswith(".jpeg") or src.endswith('.jpg') or src.endswith(".image")):
                         src_urls.append(src)
-                        print(src)
+                        print(f"Найден src: {src}")
 
+                # Определение типа капчи
                 if len(src_urls) == 2:
                     print('koleso')
                     self.captcha_type = 'koleso'
+                    pass
                     C = Cap(src_urls, 'koleso')
 
                 elif len(src_urls) == 1:
@@ -136,41 +143,81 @@ class Bot:
                         self.captcha_type = 'slider'
                         C = Cap(src_urls, 'slider')
                 else:
-                    raise IncorrectNumberOfCaptchaImages
+                    raise Exception("Неправильное количество изображений капчи")
 
+                # Отправляем капчу на решение
                 try:
                     answer = await C.send()
-                    print(answer)
+                    print(f"Ответ на капчу: {answer}")
                 except Exception as e:
-                    print(e)
+                    print(f"Ошибка при решении капчи: {e}")
+                    continue
 
                 if answer == 0:
                     n = 0
-                    while n != 2:
-                        pass
-                    # обновить капчу и попытаться еще разок
+                    return True
+                    # Обновить капчу и попробовать снова
 
+
+                # В зависимости от типа капчи решаем её
                 if self.captcha_type == "koleso":
+                    print("koleso_nachal")
+
                     await self.drag_slider(int(answer))
 
+                    print("povernul")
+                    return
+
                 elif self.captcha_type == "abc":
-                    captcha_element = self.driver.find_element(By.CLASS_NAME, "captcha_verify_image")
+                    print('abc_nachal')
+
+                    captcha_element = self.driver.find_element(By.ID, "captcha-verify-image")
                     captcha_rect = captcha_element.location
+
                     print(f"Координаты капчи: {captcha_rect}")
                     print(f"Размеры капчи: {captcha_element.size}")
 
+                    actions = ActionChains(self.driver)
+                    actions.move_by_offset(captcha_element.size[0] / 2 + captcha_rect[0],
+                                           captcha_element.size[1] / 2 + captcha_rect[1]).click().perform()
+                    await asyncio.sleep(0.5)
+                    return
+
+                    # for i in answer:
+                    #     actions = ActionChains(self.driver)
+                    #     actions.move_by_offset(captcha_rect.get('x') + i[0], captcha_rect.get('y') + i[1]).click().perform()
+                    #     await asyncio.sleep(0.5)
+
                 elif self.captcha_type == "slider":
-                    await self.drag_slider(int(answer[0] + answer[2] / 2))
+
+                    print('slider_nachal')
+
+                    dist = int(answer[0][0] + answer[0][2] / 2)
+
+                    print(dist)
+
+                    await self.drag_slider(answer[0][0] - 100)
+
+                    return
 
                 self.captcha = 1
                 await asyncio.sleep(self.delay)
-                # self.driver.save_screenshot(f"{uuid.uuid4()}.png")
-                # await asyncio.sleep(self.delay)
                 self.captcha = 2
                 return True
+
             except Exception as e:
-                print(f"Произошла ошибка при поиске капчи: {e}")
-                return False
+                print(f"Ошибка при ожидании капчи: {e}")
+                await asyncio.sleep(self.delay)
+
+    async def drag_slider(self, x: int):
+        slider = self.driver.find_element(By.CLASS_NAME, "secsdk-captcha-drag-icon")
+        ActionChains(self.driver).click_and_hold(slider).perform()
+
+        for _ in range(11):
+            ActionChains(self.driver).move_by_offset(x // 11, 0).perform()
+
+        ActionChains(self.driver).move_by_offset(x % 11, 0).release().perform()
+        return
 
     async def login(self):
         loop = asyncio.get_event_loop()
@@ -358,16 +405,6 @@ class Bot:
         print("comment")
         publ.click()
 
-    async def drag_slider(self, x: int):
-        slider = self.driver.find_element(By.CLASS_NAME, "secsdk-captcha-drag-icon")
-        ActionChains(self.driver).click_and_hold(slider).perform()
-
-        for _ in range(10):
-            ActionChains(self.driver).move_by_offset(x // 10, 0).perform()
-
-        ActionChains(self.driver).move_by_offset(x % 10, 0).release().perform()
-        return
-
     async def start_bot(self):
         self.bot_status = 0
         self.driver = webdriver.Chrome(options=self.chrome_options)
@@ -380,7 +417,7 @@ class Bot:
         online_task = asyncio.create_task(self.start_live())
         agree_task = asyncio.create_task(self.load_error_check())
 
-        await asyncio.gather(agree_task, captcha_task, button_task, online_task)
+        await asyncio.gather(captcha_task, button_task, online_task)
 
 
 if __name__ == "__main__":

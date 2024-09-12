@@ -4,7 +4,7 @@ import json
 from Captcha import Bot
 from Bot import call_operator
 import pickle
-
+from Server import TaskManager
 
 class Master:
     def __init__(self):
@@ -119,18 +119,26 @@ class Server(Master):
 
 
 async def main():
+
     m = Master()
     s = Server()
+
     await asyncio.gather(
         m.rule(),
         s.find_task()
     )
 
 
+# async def main():
+#     m = Master()
+#     s = TaskManager(login='bot@ibronevik.ru', password='btw0rd')
+#
+#     await asyncio.gather(
+#         m.rule(),
+#         s.start_monitoring()
+#     )
+
+
 if __name__ == "__main__":
     asyncio.run(main())
 
-"""
-https://p16-security-sg.ibyteimg.com/img/security-captcha-oversea-singapore/3d_c0899f7bd5ce8470ae4fa7bda6df3e10345f44d7_1_2.jpg~tplv-obj.image
-
-"""
