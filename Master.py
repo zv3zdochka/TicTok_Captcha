@@ -118,24 +118,30 @@ class Server(Master):
             await asyncio.sleep(1)
 
 
-async def main():
-
-    m = Master()
-    s = Server()
-
-    await asyncio.gather(
-        m.rule(),
-        s.find_task()
-    )
+# async def main():
+#
+#     m = Master()
+#     s = Server()
+#
+#     await asyncio.gather(
+#         m.rule(),
+#         s.find_task()
+#     )
 
 
 async def main():
     m = Master()
     s = TaskManager(login='bot@ibronevik.ru', password='btw0rd')
 
+    # Асинхронно обрабатываем задачи от TaskManager
+    async def process_tasks():
+        async for task_id, task_data in s.start_monitoring():
+            print(f"Получена задача: {task_id} с данными: {task_data}")
+            # Здесь можно обработать каждую задачу, например вызвать метод у m
+
     await asyncio.gather(
         m.rule(),
-        s.start_monitoring()
+        process_tasks()
     )
 
 

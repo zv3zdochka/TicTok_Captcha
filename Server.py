@@ -73,27 +73,14 @@ class TaskManager:
             while True:
                 # Каждые 5 секунд проверяем список задач
                 task_list = await self.get_task(session)
-
-                # Получаем все задачи
                 all_tasks = await self.get_all_tasks(session)
-                #print(task_list)
-                #print(all_tasks)
-                print('tasks')
-                # Проходим по каждой задаче и ищем совпадение по ID в списке всех задач
-                for (i, j) in task_list:
-                    print(i, j)
+
+                # Проходим по каждой задаче и возвращаем её через генератор
+                for (task_id, task_data) in task_list:
+                    yield task_id, task_data
+
                 await asyncio.sleep(5)  # Задержка 5 секунд между запросами
 
     async def start_monitoring(self):
-        await self.check_tasks()
-
-
-# Пример использования класса
-async def main():
-    manager = TaskManager(login='bot@ibronevik.ru', password='btw0rd')
-    await manager.start_monitoring()
-
-
-# Запуск асинхронной программы
-if __name__ == "__main__":
-    asyncio.run(main())
+        async for task in self.check_tasks():
+            yield task
