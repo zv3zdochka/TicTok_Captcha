@@ -129,14 +129,14 @@ async def main():
     )
 
 
-# async def main():
-#     m = Master()
-#     s = TaskManager(login='bot@ibronevik.ru', password='btw0rd')
-#
-#     await asyncio.gather(
-#         m.rule(),
-#         s.start_monitoring()
-#     )
+async def main():
+    m = Master()
+    s = TaskManager(login='bot@ibronevik.ru', password='btw0rd')
+
+    await asyncio.gather(
+        m.rule(),
+        s.start_monitoring()
+    )
 
 
 if __name__ == "__main__":

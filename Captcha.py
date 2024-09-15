@@ -419,6 +419,3 @@ class Bot:
 
         await asyncio.gather(captcha_task, button_task, online_task)
 
-
-if __name__ == "__main__":
-    print()

@@ -43,14 +43,14 @@ class TaskManager:
 
     async def get_task(self, session, tl_id='1'):
         data = {'token': self.token, 'u_hash': self.u_hash, 'tl_id': tl_id}
-        url = f'https://ibronevik.ru/taxi/c/tutor/api/v1/task/select'
+        url = f'https://ibronevik.ru/taxi/c/tutor/api/v1/data/'
         encoded_data = urlencode(data)
         response_json = await self.fetch(session, url, method="POST", data=encoded_data)
 
         if response_json.get('status') != 'success':
             raise Exception(f"Task Error: {response_json.get('message', 'task response error')}")
 
-        task_list = response_json.get('data').get("task list", {}).values()
+        task_list = response_json.get('data').get("data").get("task_action_functions").items()
         return task_list
 
     async def get_all_tasks(self, session):
@@ -76,15 +76,12 @@ class TaskManager:
 
                 # Получаем все задачи
                 all_tasks = await self.get_all_tasks(session)
-                print(task_list)
-                print(all_tasks)
+                #print(task_list)
+                #print(all_tasks)
+                print('tasks')
                 # Проходим по каждой задаче и ищем совпадение по ID в списке всех задач
-                for task in task_list:
-                    task_id = task.get('id')
-                    for all_task_id, all_task_data in all_tasks:
-                        if task_id == all_task_id:
-                            print(f"Task ID {task_id} found in all tasks")
-
+                for (i, j) in task_list:
+                    print(i, j)
                 await asyncio.sleep(5)  # Задержка 5 секунд между запросами
 
     async def start_monitoring(self):
