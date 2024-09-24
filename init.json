@@ -1,0 +1,348 @@
+{
+  '1': {
+    'ru': 'Зайти на страницу',
+    'en': 'Visit page',
+    'ar': None,
+    'fr': None,
+    'es': None,
+    'g9': None,
+    'about_ru': '',
+    'about_en': '',
+    'about_ar': '',
+    'about_fr': '',
+    'about_es': '',
+    'about_g9': '',
+    'json': None,
+    'row': [
+      {
+        'parameter': '',
+        'task_action': '6',
+        'index': '3'
+      },
+      {
+        'parameter': 'wait_par',
+        'task_action': '5',
+        'index': '2'
+      },
+      {
+        'parameter': '',
+        'task_action': '1',
+        'index': '1'
+      }
+    ]
+  },
+  '2': {
+    'ru': 'Прокомментировать',
+    'en': 'Comment',
+    'ar': None,
+    'fr': None,
+    'es': None,
+    'g9': None,
+    'about_ru': 'Go to page and leave a comment after specified number of seconds',
+    'about_en': '',
+    'about_ar': '',
+    'about_fr': '',
+    'about_es': '',
+    'about_g9': '',
+    'json': None,
+    'row': [
+      {
+        'parameter': '',
+        'task_action': '6',
+        'index': '4'
+      },
+      {
+        'parameter': '',
+        'task_action': '2',
+        'index': '3'
+      },
+      {
+        'parameter': 'wait_par',
+        'task_action': '5',
+        'index': '2'
+      },
+      {
+        'parameter': '',
+        'task_action': '1',
+        'index': '1'
+      }
+    ]
+  },
+  '3': {
+    'ru': 'Лайкнуть',
+    'en': 'Like',
+    'ar': None,
+    'fr': None,
+    'es': None,
+    'g9': None,
+    'about_ru': 'Зайти и поставить лайк',
+    'about_en': 'Go to page and like',
+    'about_ar': '',
+    'about_fr': '',
+    'about_es': '',
+    'about_g9': '',
+    'json': None,
+    'row': [
+      {
+        'parameter': '',
+        'task_action': '6',
+        'index': '4'
+      },
+      {
+        'parameter': '',
+        'task_action': '3',
+        'index': '3'
+      },
+      {
+        'parameter': 'wait_par',
+        'task_action': '5',
+        'index': '2'
+      },
+      {
+        'parameter': '',
+        'task_action': '1',
+        'index': '1'
+      }
+    ]
+  },
+  '4': {
+    'ru': 'Отправить трансляцию',
+    'en': 'Send stream',
+    'ar': None,
+    'fr': None,
+    'es': None,
+    'g9': None,
+    'about_ru': 'Зайти и передать трансляцию указанному количеству учеток',
+    'about_en': 'Go to page and send stream to specified number of accounts',
+    'about_ar': '',
+    'about_fr': '',
+    'about_es': '',
+    'about_g9': '',
+    'json': None,
+    'row': [
+      {
+        'parameter': '',
+        'task_action': '6',
+        'index': '5'
+      },
+      {
+        'parameter': 'wait_par',
+        'task_action': '5',
+        'index': '3'
+      },
+      {
+        'parameter': 'account_number',
+        'task_action': '4',
+        'index': '2'
+      },
+      {
+        'parameter': '',
+        'task_action': '1',
+        'index': '1'
+      }
+    ]
+  },
+  '5': {
+    'ru': 'Активный просмотр',
+    'en': 'Active viewing',
+    'ar': None,
+    'fr': None,
+    'es': None,
+    'g9': None,
+    'about_ru': 'Зайти, лайкнуть через  указанное количество секунд, затем периодически до завершения трансляции комментировать через указанный интервал, равный используемому для лайка',
+    'about_en': 'Go to page, like after specified number of seconds, then comment periodically until the end of stream at specified interval equal to one used for liking',
+    'about_ar': '',
+    'about_fr': '',
+    'about_es': '',
+    'about_g9': '',
+    'json': None,
+    'row': [
+      {
+        'parameter': '',
+        'task_action': '1',
+        'index': '5'
+      },
+      {
+        'parameter': 'command_count_for_loop',
+        'task_action': '7',
+        'index': '6'
+      },
+      {
+        'parameter': 'wait_comment',
+        'task_action': '5',
+        'index': '4'
+      },
+      {
+        'parameter': '',
+        'task_action': '3',
+        'index': '3'
+      },
+      {
+        'parameter': 'wait_comment',
+        'task_action': '5',
+        'index': '2'
+      },
+      {
+        'parameter': '',
+        'task_action': '1',
+        'index': '1'
+      }
+    ]
+  },
+  '6': {
+    'ru': 'создание бота;вход на сервера тик тока;вход на стрим;посидеть там;поставить лайк;выход с сервера с сохранением куки',
+    'en': None,
+    'ar': None,
+    'fr': None,
+    'es': None,
+    'g9': None,
+    'about_ru': '',
+    'about_en': '',
+    'about_ar': '',
+    'about_fr': '',
+    'about_es': '',
+    'about_g9': '',
+    'json': None,
+    'row': [
+      {
+        'parameter': '',
+        'task_action': '3',
+        'index': '4'
+      },
+      {
+        'parameter': '',
+        'task_action': '11',
+        'index': '5'
+      },
+      {
+        'parameter': '',
+        'task_action': '5',
+        'index': '3'
+      },
+      {
+        'parameter': '',
+        'task_action': '15',
+        'index': '2'
+      },
+      {
+        'parameter': '',
+        'task_action': '9',
+        'index': '1'
+      },
+      {
+        'parameter': '',
+        'task_action': '8',
+        'index': '0'
+      }
+    ]
+  },
+  '8': {
+    'ru': 'создание бота, запуск бота, зайти на стрим, лайк, выйти со стрима, отключение, удаление бота',
+    'en': None,
+    'ar': None,
+    'fr': None,
+    'es': None,
+    'g9': None,
+    'about_ru': '',
+    'about_en': '',
+    'about_ar': '',
+    'about_fr': '',
+    'about_es': '',
+    'about_g9': '',
+    'json': None,
+    'row': [
+      {
+        'parameter': '',
+        'task_action': '11',
+        'index': '5'
+      },
+      {
+        'parameter': '',
+        'task_action': '12',
+        'index': '6'
+      },
+      {
+        'parameter': '',
+        'task_action': '6',
+        'index': '4'
+      },
+      {
+        'parameter': '',
+        'task_action': '3',
+        'index': '3'
+      },
+      {
+        'parameter': '',
+        'task_action': '12',
+        'index': '1'
+      },
+      {
+        'parameter': '',
+        'task_action': '1',
+        'index': '2'
+      },
+      {
+        'parameter': '',
+        'task_action': '6',
+        'index': '0'
+      }
+    ]
+  },
+  '9': {
+    'ru': 'создание бота, запуск бота, новая модель поведения, зайти на стрим, комментарий, выйти со стрима, отключение, удаление бота',
+    'en': None,
+    'ar': None,
+    'fr': None,
+    'es': None,
+    'g9': None,
+    'about_ru': '',
+    'about_en': '',
+    'about_ar': '',
+    'about_fr': '',
+    'about_es': '',
+    'about_g9': '',
+    'json': None,
+    'row': [
+      {
+        'parameter': '',
+        'task_action': '6',
+        'index': '5'
+      },
+      {
+        'parameter': '',
+        'task_action': '11',
+        'index': '6'
+      },
+      {
+        'parameter': '',
+        'task_action': '12',
+        'index': '7'
+      },
+      {
+        'parameter': '',
+        'task_action': '2',
+        'index': '4'
+      },
+      {
+        'parameter': '',
+        'task_action': '1',
+        'index': '3'
+      },
+      {
+        'parameter': '',
+        'task_action': '9',
+        'index': '1'
+      },
+      {
+        'parameter': '',
+        'task_action': '10',
+        'index': '2'
+      },
+      {
+        'parameter': '',
+        'task_action': '8',
+        'index': '0'
+      }
+    ]
+  }
+}

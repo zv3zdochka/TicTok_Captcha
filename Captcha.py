@@ -1,6 +1,7 @@
 import json
 import asyncio
 import random
+from asyncio import Queue
 import pickle
 from concurrent.futures import ThreadPoolExecutor
 from selenium import webdriver
@@ -12,8 +13,9 @@ from selenium_authenticated_proxy import SeleniumAuthenticatedProxy
 from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
 from Capguru import Cap
-import uuid
 
+
+# noinspection PyAsyncCall
 
 class IncorrectNumberOfCaptchaImages(Exception):
     def __init__(self, message="Incorrect number of images registered in CAPTCHA."):
@@ -30,13 +32,14 @@ class Bot:
         self.captcha = 0  # 0 - init 1 - open login 2 - select type 3 change type 4 - typped 5 - successful login
         self.chrome_options = self.setup_chrome_options()
         self.driver = None
-        self.executor = ThreadPoolExecutor(max_workers=5)
+        self.executor = ThreadPoolExecutor(max_workers=10)
         self.bot_status = 1  # 0 -in process 1 - created and wait, 2 - logined and scrolling 3 - on strim
         self.com = 'comment text'
-        self.strim_link = "https://vt.tiktok.com/ZS2ydkD4g/"
+        self.strim_link = "https://www.tiktok.com/@bang_1one_96/live"
         self.proxy_login, self.proxy_password, self.proxy_cr = None, None, None
         self.model = 0  # 0 swapping & like & comment, 1 - on strim
         self.captcha_type = None
+        self.task_queue = Queue()
 
         loop = asyncio.get_event_loop()
         if loop.is_running():
@@ -83,6 +86,14 @@ class Bot:
 
         return options
 
+    async def add_task(self, task):
+        """Асинхронно добавляем задачу в очередь."""
+        await self.task_queue.put(task)
+
+    def get_queue_length(self):
+        """Возвращает длину очереди задач."""
+        return self.task_queue.qsize()
+
     async def load_error_check(self):
         """
         proxy error
@@ -107,7 +118,7 @@ class Bot:
 
     async def wait_for_captcha(self):
         loop = asyncio.get_event_loop()
-        while self.captcha != 2:
+        while True:
             try:
                 # Ожидание появления капчи
                 await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
@@ -158,52 +169,37 @@ class Bot:
                     return True
                     # Обновить капчу и попробовать снова
 
-
                 # В зависимости от типа капчи решаем её
                 if self.captcha_type == "koleso":
-                    print("koleso_nachal")
-
                     await self.drag_slider(int(answer))
-
-                    print("povernul")
                     return
 
                 elif self.captcha_type == "abc":
-                    print('abc_nachal')
-
                     captcha_element = self.driver.find_element(By.ID, "captcha-verify-image")
                     captcha_rect = captcha_element.location
 
-                    print(f"Координаты капчи: {captcha_rect}")
-                    print(f"Размеры капчи: {captcha_element.size}")
+                    # print(f"Координаты капчи: {captcha_rect}")
+                    # print(f"Размеры капчи: {captcha_element.size}")
+                    #
+                    # actions = ActionChains(self.driver)
+                    # actions.move_by_offset(captcha_element.size[0] / 2 + captcha_rect[0],
+                    #                        captcha_element.size[1] / 2 + captcha_rect[1]).click().perform()
+                    # await asyncio.sleep(0.5)
 
-                    actions = ActionChains(self.driver)
-                    actions.move_by_offset(captcha_element.size[0] / 2 + captcha_rect[0],
-                                           captcha_element.size[1] / 2 + captcha_rect[1]).click().perform()
-                    await asyncio.sleep(0.5)
+                    for i in answer:
+                        actions = ActionChains(self.driver)
+                        actions.move_by_offset(captcha_rect.get('x') + i[0],
+                                               captcha_rect.get('y') + i[1]).click().perform()
+                        await asyncio.sleep(0.5)
                     return
-
-                    # for i in answer:
-                    #     actions = ActionChains(self.driver)
-                    #     actions.move_by_offset(captcha_rect.get('x') + i[0], captcha_rect.get('y') + i[1]).click().perform()
-                    #     await asyncio.sleep(0.5)
 
                 elif self.captcha_type == "slider":
-
-                    print('slider_nachal')
-
-                    dist = int(answer[0][0] + answer[0][2] / 2)
-
-                    print(dist)
-
                     await self.drag_slider(answer[0][0] - 100)
-
                     return
 
-                self.captcha = 1
                 await asyncio.sleep(self.delay)
                 self.captcha = 2
-                return True
+                return
 
             except Exception as e:
                 print(f"Ошибка при ожидании капчи: {e}")
@@ -215,6 +211,13 @@ class Bot:
 
         for _ in range(11):
             ActionChains(self.driver).move_by_offset(x // 11, 0).perform()
+
+        ActionChains(self.driver).move_by_offset(14, 0).perform()
+        ActionChains(self.driver).move_by_offset(-10, 0).perform()
+
+        ActionChains(self.driver).move_by_offset(5, 0).perform()
+
+        ActionChains(self.driver).move_by_offset(-9, 0).perform()
 
         ActionChains(self.driver).move_by_offset(x % 11, 0).release().perform()
         return
@@ -255,7 +258,8 @@ class Bot:
                                                                '//*[@id="loginContainer"]/div[2]/form/button')))
                 login_button.click()
             finally:
-                await asyncio.sleep(3)
+                await asyncio.sleep(15)
+                # solving CAPTCHA
                 return
 
 
@@ -312,24 +316,24 @@ class Bot:
                     try:
                         await self.login()
                         self.status = 4
-                        await asyncio.sleep(10)
                     except Exception as e:
                         print(f"Can't login with error {e}")
                 case 4:
+                    # await asyncio.sleep(1100)
                     loop = asyncio.get_event_loop()
-                    print("here")
-                    await asyncio.sleep(10)
-                    try:
-                        but = await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
-                                                         waiter.presence_of_element_located((By.XPATH,
-                                                                                             '/html/body/div[1]/div[2]/div[2]/div/div/div/div[1]/div/div[1]/div/div/div[1]')))
-                        but.click()
-                    except Exception as e:
-                        pass
-                    print('video')
-                    await asyncio.sleep(3)
+                    print("find to swap")
+                    await asyncio.sleep(2)
+                    while True:
+                        try:
+                            await loop.run_in_executor(self.executor, WebDriverWait(self.driver, 10).until,
+                                                       waiter.presence_of_element_located((By.XPATH,
+                                                                                           '//*[@id="app-header"]/div/div[3]/div[3]')))
+                            print("done")
+                            break
+                        except Exception as e:
+                            pass
+                    print('start swaping videos')
                     self.status = 5
-
                     return
 
     async def online(self):
@@ -346,9 +350,11 @@ class Bot:
                     await self.swap()
 
                 case 1:
+                    # on strim
                     print("On strim")
-                    await asyncio.sleep(5)
-
+                    # await asyncio.sleep(1)
+                    # await self.strim_like()
+                    # await self.strim_comment()
                 case 2:
                     pass  # exit
 
@@ -360,11 +366,13 @@ class Bot:
 
     async def stop_bot(self):
         pickle.dump(self.driver.get_cookies(), open(f"{self.id}.pkl", "wb"))
+        self.driver.quit()
+        await asyncio.sleep(1)
 
     async def enter_strim(self):
         self.model = 1
         self.driver.get(self.strim_link)
-        await asyncio.sleep(10)
+        await asyncio.sleep(15)
 
     async def start_live(self):
         while True:
@@ -374,7 +382,7 @@ class Bot:
                 await online_task
                 return
             else:
-                await asyncio.sleep(5)
+                await asyncio.sleep(1)
 
     async def swap_like(self):
         loop = asyncio.get_event_loop()
@@ -383,6 +391,17 @@ class Bot:
                                                                              '//*[@id="app"]/div[2]/div[4]/div/div[2]/div[1]/div/div[1]/div[2]/div/div[1]/div[1]/button[1]')))
         print("like")
         but.click()
+        await asyncio.sleep(1)
+
+    async def strim_like(self):
+        loop = asyncio.get_event_loop()
+        but = await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
+                                         waiter.presence_of_element_located((By.XPATH,
+                                                                             '//*[@id="tiktok-live-main-container-id"]/div[4]/div[2]/div/div[2]/div[3]/div[2]/div[1]/div[4]')))
+        print("like")
+        for _ in range(20):
+            but.click()
+        await asyncio.sleep(1)
 
     async def swap(self):
         loop = asyncio.get_event_loop()
@@ -391,6 +410,7 @@ class Bot:
                                                                              '//*[@id="app"]/div[2]/div[4]/div/div[1]/button[3]')))
         print('swap')
         but.click()
+        await asyncio.sleep(1)
 
     async def swap_comment(self):
         loop = asyncio.get_event_loop()
@@ -404,18 +424,81 @@ class Bot:
                                               (By.XPATH, '//*[@id="app"]/div[2]/div[4]/div/div[2]/div[2]/div/div[2]')))
         print("comment")
         publ.click()
+        await asyncio.sleep(1)
+
+    async def strim_comment(self):
+        loop = asyncio.get_event_loop()
+
+        box = await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
+                                         waiter.presence_of_element_located((By.XPATH,
+                                                                             '//*[@id="tiktok-live-main-container-id"]/div[4]/div[2]/div/div[2]/div[3]/div[4]/div[1]/div/div[1]/div')))
+        box.send_keys("Testing comment")
+        publ = await loop.run_in_executor(self.executor, WebDriverWait(self.driver, self.timeout).until,
+                                          waiter.presence_of_element_located(
+                                              (By.XPATH,
+                                               '//*[@id="tiktok-live-main-container-id"]/div[4]/div[2]/div/div[2]/div[3]/div[4]/div[2]')))
+        print("comment")
+        publ.click()
+        await asyncio.sleep(1)
+
+    # noinspection PyAsyncCall
 
     async def start_bot(self):
         self.bot_status = 0
         self.driver = webdriver.Chrome(options=self.chrome_options)
         self.driver.delete_all_cookies()
         self.driver.get(self.url)
-        await asyncio.sleep(5)
+        await asyncio.sleep(3)
 
-        captcha_task = asyncio.create_task(self.wait_for_captcha())
-        button_task = asyncio.create_task(self.clicker())
-        online_task = asyncio.create_task(self.start_live())
-        agree_task = asyncio.create_task(self.load_error_check())
+        asyncio.create_task(self.wait_for_captcha())
+        clicker_task = asyncio.create_task(self.clicker())
+        asyncio.create_task(self.start_live())
+        await asyncio.gather(clicker_task)
+        print("We end on login")
+        await asyncio.sleep(1)
+        return
 
-        await asyncio.gather(captcha_task, button_task, online_task)
+    async def process_task(self, task):
+        print(task)
+        func_id = int(task.get('args').get("task_action"))
+        match func_id:
+            case 9:
+                print("Starting bot")
+                try:
+                    await self.start_bot()
+                except Exception:
+                    print("Can't start bot")
+                print("Bot started")
 
+            case 15:
+                print("Going on strim")
+                try:
+                    await self.enter_strim()
+                except Exception:
+                    print("cant push bot on strim")
+                print('On strim')
+            case 5:
+                # wait
+                pass
+            case 3:
+                try:
+                    await self.strim_like()
+                except Exception:
+                    print("can't like")
+                pass
+            case 11:
+                try:
+                    await self.stop_bot()
+                except Exception:
+                    print("can't stop bot")
+                pass
+
+    async def run(self):
+        """Асинхронный цикл бота для проверки и выполнения задач."""
+        while True:
+            if not self.task_queue.empty():
+                task = await self.task_queue.get()
+                print(task)
+                await self.process_task(task)
+            else:
+                await asyncio.sleep(1)
